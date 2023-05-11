@@ -46,7 +46,7 @@ hospital_button.grid(row=2, column=0, sticky="news", padx=20, pady=5)
 # Get Stock
 
 stock_button = tkinter.Button(
-    frame, text="Add/Delete Stock", command=sales, bg=BG)
+    frame, text="Add/Delete Stock", command=stock, bg=BG)
 stock_button.grid(row=3, column=0, sticky="news", padx=20, pady=5)
 
 
