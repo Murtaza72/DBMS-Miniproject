@@ -1,5 +1,5 @@
 import tkinter
-from tkinter import Frame, Label, LabelFrame, Entry, messagebox, ttk
+from tkinter import Frame, Label, LabelFrame, Entry, ttk
 from PIL import ImageTk, Image
 import re
 

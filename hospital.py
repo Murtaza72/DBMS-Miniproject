@@ -1,5 +1,5 @@
 import tkinter
-from tkinter import Frame, Label, LabelFrame, Entry, messagebox, ttk, font
+from tkinter import Frame, Label, LabelFrame, Entry, font
 
 from main import BG
 

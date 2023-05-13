@@ -1,9 +1,7 @@
 import tkinter
-from tkinter import Frame, Label, LabelFrame, Entry, messagebox, ttk, font
+from tkinter import Frame, Label, LabelFrame, Entry, font
 
-from main import BG
-
-BUTTON_BG = "#008001"
+from main import BG, BUTTON_BG
 
 window = tkinter.Tk()
 window.title("Stock")
@@ -26,43 +24,43 @@ header_label.grid(row=0, column=0, padx=20, pady=20)
 header_frame = Frame(main_frame, bg=BG)
 header_frame.grid(row=1, column=0)
 
-hospital_labelframe = LabelFrame(
+stock_labelframe = LabelFrame(
     header_frame, text="Stock Information", bg=BG)
-hospital_labelframe.grid(row=1, column=0, padx=20, pady=10)
+stock_labelframe.grid(row=1, column=0, padx=20, pady=10)
 
-hospital_id_label = Label(
-    hospital_labelframe, text="Medicine ID", bg=BG)
-hospital_id_label.grid(row=0, column=0, padx=20, pady=10)
+medicine_id_label = Label(
+    stock_labelframe, text="Medicine ID", bg=BG)
+medicine_id_label.grid(row=0, column=0, padx=20, pady=10)
 
-hospital_name_label = Label(
-    hospital_labelframe, text="Medicine Name", bg=BG)
-hospital_name_label.grid(row=1, column=0, padx=20, pady=10)
+medicine_name_label = Label(
+    stock_labelframe, text="Medicine Name", bg=BG)
+medicine_name_label.grid(row=1, column=0, padx=20, pady=10)
 
 mfg_date_label = Label(
-    hospital_labelframe, text="Mfg Date", bg=BG)
+    stock_labelframe, text="Mfg Date", bg=BG)
 mfg_date_label.grid(row=2, column=0, padx=20, pady=10)
 
 exp_date_label = Label(
-    hospital_labelframe, text="Expiry Date", bg=BG)
+    stock_labelframe, text="Expiry Date", bg=BG)
 exp_date_label.grid(row=3, column=0, padx=20, pady=10)
 
 disease_label = Label(
-    hospital_labelframe, text="Disease", bg=BG)
+    stock_labelframe, text="Disease", bg=BG)
 disease_label.grid(row=4, column=0, padx=20, pady=10)
 
 stock_label = Label(
-    hospital_labelframe, text="Stock", bg=BG)
+    stock_labelframe, text="Stock", bg=BG)
 stock_label.grid(row=5, column=0, padx=20, pady=10)
 
-hospital_id_entry = Entry(hospital_labelframe)
-hospital_name_entry = Entry(hospital_labelframe)
-mfg_date_entry = Entry(hospital_labelframe)
-exp_date_entry = Entry(hospital_labelframe)
-disease_entry = Entry(hospital_labelframe)
-stock_entry = Entry(hospital_labelframe)
+stock_id_entry = Entry(stock_labelframe)
+stock_name_entry = Entry(stock_labelframe)
+mfg_date_entry = Entry(stock_labelframe)
+exp_date_entry = Entry(stock_labelframe)
+disease_entry = Entry(stock_labelframe)
+stock_entry = Entry(stock_labelframe)
 
-hospital_id_entry.grid(row=0, column=1, padx=10, pady=0)
-hospital_name_entry.grid(row=1, column=1, padx=10, pady=0)
+stock_id_entry.grid(row=0, column=1, padx=10, pady=0)
+stock_name_entry.grid(row=1, column=1, padx=10, pady=0)
 mfg_date_entry.grid(row=2, column=1, padx=10, pady=0)
 exp_date_entry.grid(row=3, column=1, padx=10, pady=0)
 disease_entry.grid(row=4, column=1, padx=10, pady=0)
@@ -70,12 +68,12 @@ stock_entry.grid(row=5, column=1, padx=10, pady=0)
 
 
 def add():
-    h_id = hospital_id_entry.get()
-    h_name = hospital_name_entry.get()
+    s_id = stock_id_entry.get()
+    s_name = stock_name_entry.get()
 
     print("Added")
-    print("ID:", h_id)
-    print("Name:", h_name)
+    print("ID:", s_id)
+    print("Name:", s_name)
 
 
 def delete_():
@@ -92,8 +90,8 @@ def display():
 
 def reset():
     # delete takes first and last index of text to be cleared
-    hospital_id_entry.delete(0, "end")
-    hospital_name_entry.delete(0, "end")
+    stock_id_entry.delete(0, "end")
+    stock_name_entry.delete(0, "end")
     mfg_date_entry.delete(0, "end")
     exp_date_entry.delete(0, "end")
     disease_entry.delete(0, "end")

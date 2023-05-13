@@ -4,6 +4,7 @@ from PIL import ImageTk, Image
 
 # Colors
 BG = "#F0FFFF"
+BUTTON_BG = "#008001"
 
 
 def main():
