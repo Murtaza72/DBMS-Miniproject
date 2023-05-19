@@ -3,7 +3,7 @@ from ttkbootstrap.dialogs.dialogs import Messagebox
 from PIL import ImageTk, Image
 
 DATABASE_NAME = "warehouse2"
-PASSWORD = "murtu"
+PASSWORD = ""
 THEME = "minty"
 
 
