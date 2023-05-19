@@ -1,140 +1,231 @@
-import tkinter
-from tkinter import Frame, Label, LabelFrame, Entry, font
+import ttkbootstrap as ttk
+from ttkbootstrap.tableview import Tableview
+from ttkbootstrap.dialogs.dialogs import Messagebox
+import mysql.connector as mysql
 
-from main import BG, BUTTON_BG
-
-window = tkinter.Tk()
-window.title("Sales")
-window.configure(bg=BG)
-
-window.defaultFont = font.nametofont("TkDefaultFont")
-window.defaultFont.configure(family="Arial", size=15)
-
-main_frame = Frame(window, bg=BG)
-main_frame.grid(row=0, column=0)
-
-header_label = Label(main_frame, text="Sales Table",
-                     font=("Arial", 25, "bold"), bg=BG)
-header_label.grid(row=0, column=0, padx=20, pady=20)
+from main import DATABASE_NAME, PASSWORD, THEME
 
 
-header_frame = Frame(main_frame, bg=BG)
-header_frame.grid(row=1, column=0)
-
-stock_labelframe = LabelFrame(
-    header_frame, text="Sales Information", bg=BG)
-stock_labelframe.grid(row=1, column=0, padx=20, pady=10)
-
-batch_id_label = Label(
-    stock_labelframe, text="Batch ID", bg=BG)
-batch_id_label.grid(row=0, column=0, padx=20, pady=10)
-
-hospital_id_label = Label(
-    stock_labelframe, text="Hospital ID", bg=BG)
-hospital_id_label.grid(row=1, column=0, padx=20, pady=10)
-
-medicine_id_label = Label(
-    stock_labelframe, text="Medicine ID", bg=BG)
-medicine_id_label.grid(row=2, column=0, padx=20, pady=10)
-
-qty_label = Label(
-    stock_labelframe, text="Quantity", bg=BG)
-qty_label.grid(row=3, column=0, padx=20, pady=10)
+global d
 
 
-batch_id_entry = Entry(stock_labelframe)
-hospital_id_entry = Entry(stock_labelframe)
-medicine_id_entry = Entry(stock_labelframe)
-qty_entry = Entry(stock_labelframe)
+def start(root):
+    db = mysql.connect(host="localhost",
+                       user="root",
+                       password=PASSWORD)
 
-batch_id_entry.grid(row=0, column=1, padx=10, pady=0)
-hospital_id_entry.grid(row=1, column=1, padx=10, pady=0)
-medicine_id_entry.grid(row=2, column=1, padx=10, pady=0)
-qty_entry.grid(row=3, column=1, padx=10, pady=0)
+    d = DATABASE_NAME
+    cursor = db.cursor()
+    que1 = 'use {}'.format(d)
+    cursor.execute(que1)
 
+    if (db.is_connected()):
+        print("Connected to MySQL Successfully")
+    else:
+        print("Error Connecting to MySQL")
 
-def add():
-    b_id = batch_id_entry.get()
-    h_id = hospital_id_entry.get()
-    m_id = medicine_id_entry.get()
-    qty = qty_entry.get()
+    window = ttk.Toplevel(root)
+    window.title("Sales")
 
-    print("Added")
-    print("BID:", b_id)
-    print("HID:", h_id)
-    print("MID:", m_id)
-    print("QTY:", qty)
+    window.style.configure('.', font=('Arial', 12))
 
+    main_frame = ttk.Frame(window)
+    main_frame.grid(row=0, column=0)
 
-def delete_():
-    print("Deleted")
+    header_label = ttk.Label(main_frame, text="Sales Table",
+                             font=("Arial", 25, "bold"))
+    header_label.grid(row=0, column=0, padx=20, pady=20)
 
+    header_frame = ttk.Frame(main_frame)
+    header_frame.grid(row=1, column=0)
 
-def update():
-    print("Updated")
+    stock_labelframe = ttk.LabelFrame(
+        header_frame, text="Sales Information")
+    stock_labelframe.grid(row=1, column=0, padx=20, pady=10)
 
+    hospital_id_label = ttk.Label(
+        stock_labelframe, text="Hospital Name")
+    hospital_id_label.grid(row=1, column=0, padx=20, pady=10)
 
-def display():
-    print("Displayed")
+    medicine_id_label = ttk.Label(
+        stock_labelframe, text="Vaccine Name")
+    medicine_id_label.grid(row=2, column=0, padx=20, pady=10)
 
+    qty_label = ttk.Label(
+        stock_labelframe, text="Quantity")
+    qty_label.grid(row=3, column=0, padx=20, pady=10)
 
-def reset():
-    # delete takes first and last index of text to be cleared
-    batch_id_entry.delete(0, "end")
-    hospital_id_entry.delete(0, "end")
-    medicine_id_entry.delete(0, "end")
-    qty_entry.delete(0, "end")
+    hospital_id_entry = ttk.Entry(stock_labelframe)
+    medicine_id_entry = ttk.Entry(stock_labelframe)
+    qty_entry = ttk.Entry(stock_labelframe)
 
+    hospital_id_entry.grid(row=1, column=1, padx=10, pady=0)
+    medicine_id_entry.grid(row=2, column=1, padx=10, pady=0)
+    qty_entry.grid(row=3, column=1, padx=10, pady=0)
 
-# Button Frame
+    def add():
+        h_id = hospital_id_entry.get()
+        m_id = medicine_id_entry.get()
+        qty = qty_entry.get()
 
-button_frame = Frame(main_frame, bg=BG)
-button_frame.grid(row=2, column=0, padx=10, pady=10)
+        q = "select count(*) from partial_order;"
+        cursor.execute(q)
+        data1 = cursor.fetchall()[0]
 
-add_button = tkinter.Button(button_frame, text=" Add ",
-                            command=add, bg=BUTTON_BG)
-add_button.grid(row=0, column=0, sticky="news", pady=10)
+        q1 = "CALL insert_into_sales('{}','{}',{});".format(m_id, h_id, qty)
+        cursor.execute(q1)
 
-delete_button = tkinter.Button(button_frame, text="Delete",
-                               command=delete_, bg=BUTTON_BG)
-delete_button.grid(row=0, column=1, sticky="news", pady=10)
+        # Consume unread results
+        cursor.fetchall()
 
-update_button = tkinter.Button(button_frame, text="Update",
-                               command=update, bg=BUTTON_BG)
-update_button.grid(row=0, column=2, sticky="news", pady=10)
+        cursor.execute(
+            "select Status from stock where M_name='{}';".format(m_id))
+        val = cursor.fetchall()
+        if val[0][0] == "Expired":
+            Messagebox.show_warning(
+                title="Warning", message="Vaccine is expired!!")
 
-display_button = tkinter.Button(button_frame, text="Display",
-                                command=display, bg=BUTTON_BG)
-display_button.grid(row=0, column=3, sticky="news", pady=10)
+        q2 = "select count(*) from partial_order;"
+        cursor.execute(q2)
+        data2 = cursor.fetchall()[0]
+        db.commit()
 
-reset_button = tkinter.Button(button_frame, text="Reset",
-                              command=reset, bg=BUTTON_BG)
-reset_button.grid(row=0, column=4, sticky="news", pady=10)
+        if data2 > data1:
+            Messagebox.show_info(message="Some partial orders there!!")
+            cursor.execute("CALL update_partial()")
+            db.commit()
+        display()
 
-exit_button = tkinter.Button(button_frame, text=" Exit ",
-                             command=exit, bg="#FF0000")
-exit_button.grid(row=0, column=5, sticky="news", pady=10)
+    def display():
+        cursor.execute("SELECT * FROM sales;")
+        data = cursor.fetchall()
 
+        sales_table = ttk.LabelFrame(main_frame, text="Table Information")
+        sales_table.grid(row=3, column=0, padx=20, pady=10)
 
-# Table frame
+        headers = [{"text": "Batch ID", "stretch": False},
+                   {"text": "Hospital ID", "stretch": False},
+                   {"text": "Vaccine ID", "stretch": False},
+                   {"text": "Quantity", "stretch": True},
+                   {"text": "Order Date", "stretch": True},
+                   {"text": "Total Price", "stretch": True}]
 
-table_frame = Frame(main_frame, bg=BG)
-table_frame.grid(row=3, column=0, padx=20, pady=20)
+        table = Tableview(sales_table,
+                          bootstyle="INFO",
+                          coldata=headers,
+                          rowdata=data,
+                          height=6)
 
-table_labelframe = LabelFrame(table_frame, text="Table Information", bg=BG)
-table_labelframe.grid(row=0, column=0, pady=10)
+        table.autofit_columns()
+        table.grid(row=0, column=0, padx=20, pady=20)
 
-bid_label = Label(table_labelframe, text="Batch ID", bg=BG)
-bid_label.grid(row=0, column=0, padx=30, pady=20)
+    def reset():
+        hospital_id_entry.delete(0, "end")
+        medicine_id_entry.delete(0, "end")
+        qty_entry.delete(0, "end")
 
-hid_label = Label(table_labelframe, text="Hospital ID", bg=BG)
-hid_label.grid(row=0, column=1, padx=30, pady=20)
+    def show_sale():
+        root = ttk.Toplevel(title="Sales Table")
+        root.resizable(False, False)
 
-mid_label = Label(table_labelframe, text="Medicine ID", bg=BG)
-mid_label.grid(row=0, column=2, padx=30, pady=20)
+        month_sale_frame = ttk.LabelFrame(root, text="Table Information")
+        month_sale_frame.grid(row=0, column=0, padx=20, pady=10)
 
-qty_label = Label(table_labelframe, text="Quantity", bg=BG)
-qty_label.grid(row=0, column=3, padx=30, pady=20)
+        q1 = "CALL getmonthlysales();"
+        cursor.execute(q1)
+        data = cursor.fetchall()
 
-window.resizable(False, False)
-window.mainloop()
+        header = ["Vaccine Name", "Total Price"]
+        headers = [
+            {"text": "Vaccine Name", "stretch": True},
+            {"text": "Total Price", "stretch": True}]
+
+        table = Tableview(month_sale_frame,
+                          bootstyle="INFO",
+                          coldata=headers,
+                          rowdata=data,
+                          height=5)
+
+        table.autofit_columns()
+        table.grid(row=0, column=0, padx=20, pady=20)
+
+    def partial_order():
+        root = ttk.Toplevel(title="Partial Orders Table")
+        root.resizable(False, False)
+
+        partial_order_frame = ttk.LabelFrame(root, text="Table Information")
+        partial_order_frame.grid(row=0, column=0, padx=20, pady=10)
+
+        q1 = "SELECT * FROM partial_order;"
+        cursor.execute(q1)
+        data = cursor.fetchall()
+
+        headers = [
+            {"text": "Hospital ID", "stretch": False},
+            {"text": "Vaccine ID", "stretch": False},
+            {"text": "Quantity Left", "stretch": True}]
+
+        table = Tableview(partial_order_frame,
+                          bootstyle="INFO",
+                          coldata=headers,
+                          rowdata=data,
+                          height=5)
+
+        table.autofit_columns()
+        table.grid(row=0, column=0, padx=20, pady=20)
+
+    def expire():
+        root = ttk.Toplevel(title="Expired Table")
+        root.resizable(False, False)
+
+        expired_table = ttk.LabelFrame(root, text="Table Information")
+        expired_table.grid(row=0, column=0, padx=20, pady=10)
+
+        cursor.execute("SELECT * FROM expired")
+        data = cursor.fetchall()
+
+        headers = [
+            {"text": "Vaccine ID", "stretch": False},
+            {"text": "Vaccine Name", "stretch": True},
+            {"text": "Expiry Date", "stretch": True}]
+
+        table = Tableview(expired_table,
+                          bootstyle="INFO",
+                          coldata=headers,
+                          rowdata=data,
+                          height=10)
+
+        table.autofit_columns()
+        table.grid(row=0, column=0, padx=20, pady=20)
+
+    # Button Frame
+
+    button_frame = ttk.Frame(main_frame)
+    button_frame.grid(row=2, column=0, padx=10, pady=10)
+
+    add_button = ttk.Button(button_frame, text=" Add ",
+                            command=add)
+    add_button.grid(row=0, column=0, sticky="news", padx=1, pady=5)
+
+    display_button = ttk.Button(button_frame, text="Display",
+                                command=display)
+    display_button.grid(row=0, column=1, sticky="news", padx=1, pady=5)
+
+    reset_button = ttk.Button(button_frame, text="Reset",
+                              command=reset)
+    reset_button.grid(row=0, column=2, sticky="news", padx=1, pady=5)
+
+    sale_button = ttk.Button(button_frame, text="Monthly Sales",
+                             command=show_sale)
+    sale_button.grid(row=0, column=3, sticky="news", padx=1, pady=5)
+
+    expired_button = ttk.Button(
+        button_frame, text="Expired Stock", command=expire)
+    expired_button.grid(row=0, column=5, sticky="news", padx=1, pady=5)
+
+    exit_button = ttk.Button(button_frame, text=" Exit ",
+                             command=exit, bootstyle="DANGER")
+    exit_button.grid(row=0, column=6, sticky="news", padx=1, pady=5)
+
+    window.resizable(False, False)
+    window.mainloop()

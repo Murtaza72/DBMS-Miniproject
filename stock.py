@@ -1,158 +1,209 @@
-import tkinter
-from tkinter import Frame, Label, LabelFrame, Entry, font
+from tkinter import StringVar
 
-from main import BG, BUTTON_BG
+import ttkbootstrap as ttk
+from ttkbootstrap.tableview import Tableview
+from ttkbootstrap.dialogs.dialogs import Messagebox
+from ttkbootstrap.widgets import DateEntry
 
-window = tkinter.Tk()
-window.title("Stock")
-window.configure(bg=BG)
+import mysql.connector as mysql
 
-# Changing default font size globally
-window.defaultFont = font.nametofont("TkDefaultFont")
-window.defaultFont.configure(family="Arial", size=15)
+from main import DATABASE_NAME, PASSWORD, THEME
 
-main_frame = Frame(window, bg=BG)
-main_frame.grid(row=0, column=0)
-
-header_label = Label(main_frame, text="Stock Table",
-                     font=("Arial", 25, "bold"), bg=BG)
-header_label.grid(row=0, column=0, padx=20, pady=20)
+global d
 
 
-# Header Frame
+def start(root):
 
-header_frame = Frame(main_frame, bg=BG)
-header_frame.grid(row=1, column=0)
+    db = mysql.connect(host="localhost",
+                       user="root",
+                       password=PASSWORD)
 
-stock_labelframe = LabelFrame(
-    header_frame, text="Stock Information", bg=BG)
-stock_labelframe.grid(row=1, column=0, padx=20, pady=10)
+    d = DATABASE_NAME
+    cursor = db.cursor()
+    que1 = 'use {}'.format(d)
+    cursor.execute(que1)
 
-medicine_id_label = Label(
-    stock_labelframe, text="Medicine ID", bg=BG)
-medicine_id_label.grid(row=0, column=0, padx=20, pady=10)
+    if (db.is_connected()):
+        print("Connected to MySQL Successfully")
+    else:
+        print("Error Connecting to MySQL")
 
-medicine_name_label = Label(
-    stock_labelframe, text="Medicine Name", bg=BG)
-medicine_name_label.grid(row=1, column=0, padx=20, pady=10)
+    window = ttk.Toplevel(root)
+    window.title("Stock")
 
-mfg_date_label = Label(
-    stock_labelframe, text="Mfg Date", bg=BG)
-mfg_date_label.grid(row=2, column=0, padx=20, pady=10)
+    window.style.configure('.', font=('Arial', 12))
 
-exp_date_label = Label(
-    stock_labelframe, text="Expiry Date", bg=BG)
-exp_date_label.grid(row=3, column=0, padx=20, pady=10)
+    main_frame = ttk.Frame(window)
+    main_frame.grid(row=0, column=0)
 
-disease_label = Label(
-    stock_labelframe, text="Disease", bg=BG)
-disease_label.grid(row=4, column=0, padx=20, pady=10)
+    header_label = ttk.Label(main_frame, text="Stock Table",
+                             font=("Arial", 25, "bold"))
+    header_label.grid(row=0, column=0, padx=20, pady=20)
 
-stock_label = Label(
-    stock_labelframe, text="Stock", bg=BG)
-stock_label.grid(row=5, column=0, padx=20, pady=10)
+    # Header Frame
 
-stock_id_entry = Entry(stock_labelframe)
-stock_name_entry = Entry(stock_labelframe)
-mfg_date_entry = Entry(stock_labelframe)
-exp_date_entry = Entry(stock_labelframe)
-disease_entry = Entry(stock_labelframe)
-stock_entry = Entry(stock_labelframe)
+    header_frame = ttk.Frame(main_frame)
+    header_frame.grid(row=1, column=0)
 
-stock_id_entry.grid(row=0, column=1, padx=10, pady=0)
-stock_name_entry.grid(row=1, column=1, padx=10, pady=0)
-mfg_date_entry.grid(row=2, column=1, padx=10, pady=0)
-exp_date_entry.grid(row=3, column=1, padx=10, pady=0)
-disease_entry.grid(row=4, column=1, padx=10, pady=0)
-stock_entry.grid(row=5, column=1, padx=10, pady=0)
+    hospital_labelframe = ttk.LabelFrame(
+        header_frame, text="Stock Information")
+    hospital_labelframe.grid(row=1, column=0, padx=20, pady=10)
 
+    hospital_name_label = ttk.Label(
+        hospital_labelframe, text="Medicine Name")
+    hospital_name_label.grid(row=1, column=0, padx=20, pady=10)
 
-def add():
-    s_id = stock_id_entry.get()
-    s_name = stock_name_entry.get()
+    mfg_date_label = ttk.Label(
+        hospital_labelframe, text="Mfg Date")
+    mfg_date_label.grid(row=2, column=0, padx=20, pady=10)
 
-    print("Added")
-    print("ID:", s_id)
-    print("Name:", s_name)
+    exp_date_label = ttk.Label(
+        hospital_labelframe, text="Expiry Date")
+    exp_date_label.grid(row=3, column=0, padx=20, pady=10)
 
+    disease_label = ttk.Label(
+        hospital_labelframe, text="Disease")
+    disease_label.grid(row=4, column=0, padx=20, pady=10)
 
-def delete_():
-    print("Deleted")
+    stock_label = ttk.Label(
+        hospital_labelframe, text="Stock")
+    stock_label.grid(row=5, column=0, padx=20, pady=10)
 
+    stock_label = ttk.Label(
+        hospital_labelframe, text="Rate")
+    stock_label.grid(row=6, column=0, padx=20, pady=10)
 
-def update():
-    print("Updated")
+    hospital_name_entry = ttk.Entry(hospital_labelframe)
 
+    mfg_date_entry = DateEntry(
+        hospital_labelframe, dateformat="%Y-%m-%d", width=15)
+    exp_date_entry = DateEntry(
+        hospital_labelframe, dateformat="%Y-%m-%d", width=15)
 
-def display():
-    print("Displayed")
+    disease_drop = StringVar()
+    disease_drop.set("Select Disease")
 
+    disease_entry = ttk.Combobox(
+        hospital_labelframe, width=18, textvariable=disease_drop, style='info.TCombobox')
+    disease_entry["values"] = (
+        "Polio", "Covid-19", "Chicken Pox", "Hepatisis B", "Tuberculosis")
 
-def reset():
-    # delete takes first and last index of text to be cleared
-    stock_id_entry.delete(0, "end")
-    stock_name_entry.delete(0, "end")
-    mfg_date_entry.delete(0, "end")
-    exp_date_entry.delete(0, "end")
-    disease_entry.delete(0, "end")
-    stock_entry.delete(0, "end")
+    stock_entry = ttk.Entry(hospital_labelframe)
+    rate_entry = ttk.Entry(hospital_labelframe)
 
+    hospital_name_entry.grid(row=1, column=1, padx=10, pady=0)
+    mfg_date_entry.grid(row=2, column=1, padx=10, pady=0)
+    exp_date_entry.grid(row=3, column=1, padx=10, pady=0)
 
-# Button Frame
+    disease_entry.grid(row=4, column=1, padx=10, pady=0)
+    disease_entry.current()
 
-button_frame = Frame(main_frame, bg=BG)
-button_frame.grid(row=2, column=0, padx=10, pady=10)
+    stock_entry.grid(row=5, column=1, padx=10, pady=0)
+    rate_entry.grid(row=6, column=1, padx=10, pady=0)
 
-add_button = tkinter.Button(button_frame, text=" Add ",
-                            command=add, bg=BUTTON_BG)
-add_button.grid(row=0, column=0, sticky="news", pady=10)
+    def add():
+        m_name = hospital_name_entry.get()
+        m_mfg = mfg_date_entry.entry.get()
+        m_exp = exp_date_entry.entry.get()
+        disease = disease_drop.get()
+        m_stk = stock_entry.get()
+        m_rate = rate_entry.get()
+        q1 = "CALL insert_into_stock('{}','{}','{}','{}',{},{});".format(
+            str(m_name), str(m_mfg), str(m_exp), str(disease), m_stk, m_rate)
+        cursor.execute(q1)
+        db.commit()
+        print(cursor.rowcount, "records inserted into table!!")
+        print("Added")
+        display()
 
-delete_button = tkinter.Button(button_frame, text="Delete",
-                               command=delete_, bg=BUTTON_BG)
-delete_button.grid(row=0, column=1, sticky="news", pady=10)
+    def delete_():
+        m_name = hospital_name_entry.get()
+        q2 = "CALL delete_from_stocks('{}');".format(m_name)
+        cursor.execute(q2)
+        db.commit()
+        print("Deleted")
+        display()
 
-update_button = tkinter.Button(button_frame, text="Update",
-                               command=update, bg=BUTTON_BG)
-update_button.grid(row=0, column=2, sticky="news", pady=10)
+    def update():
+        m_name = hospital_name_entry.get()
+        m_mfg = mfg_date_entry.get()
+        m_exp = exp_date_entry.get()
+        disease = disease_drop.get()
+        m_stk = stock_entry.get()
+        m_rate = rate_entry.get()
+        q3 = "update stock set M_mfg='{}',M_exp='{}',Disease='{}',M_stock={},RATE={} where M_name='{}';".format(
+            str(m_mfg), str(m_exp), str(disease), str(m_stk), str(m_rate), str(m_name))
+        cursor.execute(q3)
+        db.commit()
+        print("Updated")
+        display()
 
-display_button = tkinter.Button(button_frame, text="Display",
-                                command=display, bg=BUTTON_BG)
-display_button.grid(row=0, column=3, sticky="news", pady=10)
+    def display():
+        q2 = "CALL update_status();"
+        cursor.execute(q2)
+        db.commit()
+        cursor.execute("SELECT * FROM stock")
 
-reset_button = tkinter.Button(button_frame, text="Reset",
-                              command=reset, bg=BUTTON_BG)
-reset_button.grid(row=0, column=4, sticky="news", pady=10)
+        data = cursor.fetchall()
 
-exit_button = tkinter.Button(button_frame, text=" Exit ",
-                             command=exit, bg="#FF0000")
-exit_button.grid(row=0, column=5, sticky="news", pady=10)
+        stock_table = ttk.LabelFrame(main_frame, text="Table Information")
+        stock_table.grid(row=3, column=0, padx=20, pady=10)
 
+        headers = [{"text": "Vaccine ID", "stretch": False},
+                   {"text": "Vaccine Name", "stretch": True},
+                   {"text": "Mfg Date", "stretch": True},
+                   {"text": "Expiry Date", "stretch": True},
+                   {"text": "Disease", "stretch": True},
+                   {"text": "Stock", "stretch": True},
+                   {"text": "Rate", "stretch": True},
+                   {"text": "Status", "stretch": True}]
 
-# Table frame
+        table = Tableview(stock_table,
+                          bootstyle="INFO",
+                          coldata=headers,
+                          rowdata=data,
+                          height=5)
 
-table_frame = Frame(main_frame, bg=BG)
-table_frame.grid(row=3, column=0, padx=20, pady=20)
+        table.autofit_columns()
+        table.grid(row=0, column=0, padx=20, pady=20)
 
-table_labelframe = LabelFrame(table_frame, text="Table Information", bg=BG)
-table_labelframe.grid(row=0, column=0, pady=10)
+    def reset():
+        # delete takes first and last index of text to be cleared
+        hospital_name_entry.delete(0, "end")
+        mfg_date_entry.entry.delete(0, "end")
+        exp_date_entry.entry.delete(0, "end")
+        disease_drop.set("Select Disease")
+        stock_entry.delete(0, "end")
+        rate_entry.delete(0, "end")
 
-id_label = Label(table_labelframe, text="ID", bg=BG)
-id_label.grid(row=0, column=0, padx=30, pady=20)
+    # Button Frame
 
-name_label = Label(table_labelframe, text="Name", bg=BG)
-name_label.grid(row=0, column=1, padx=30, pady=20)
+    button_frame = ttk.Frame(main_frame)
+    button_frame.grid(row=2, column=0, padx=10, pady=10)
 
-mfg_label = Label(table_labelframe, text="Mfg", bg=BG)
-mfg_label.grid(row=0, column=2, padx=30, pady=20)
+    add_button = ttk.Button(button_frame, text=" Add ",
+                            command=add)
+    add_button.grid(row=0, column=0, sticky="news", padx=1, pady=10)
 
-exp_label = Label(table_labelframe, text="Expiry", bg=BG)
-exp_label.grid(row=0, column=3, padx=30, pady=20)
+    delete_button = ttk.Button(button_frame, text="Delete",
+                               command=delete_)
+    delete_button.grid(row=0, column=1, sticky="news", padx=1, pady=10)
 
-disease_label = Label(table_labelframe, text="Disease", bg=BG)
-disease_label.grid(row=0, column=4, padx=30, pady=20)
+    update_button = ttk.Button(button_frame, text="Update",
+                               command=update)
+    update_button.grid(row=0, column=2, sticky="news", padx=1, pady=10)
 
-stock_label = Label(table_labelframe, text="Stock", bg=BG)
-stock_label.grid(row=0, column=5, padx=30, pady=20)
+    display_button = ttk.Button(button_frame, text="Display",
+                                command=display)
+    display_button.grid(row=0, column=3, sticky="news", padx=1, pady=10)
 
-window.resizable(False, False)
-window.mainloop()
+    reset_button = ttk.Button(button_frame, text="Reset",
+                              command=reset)
+    reset_button.grid(row=0, column=4, sticky="news", padx=1, pady=10)
+
+    exit_button = ttk.Button(button_frame, text=" Exit ",
+                             command=exit, bootstyle="DANGER")
+    exit_button.grid(row=0, column=5, sticky="news", padx=1, pady=10)
+
+    window.resizable(False, False)
+    window.mainloop()
