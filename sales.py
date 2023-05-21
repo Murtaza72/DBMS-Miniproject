@@ -1,9 +1,11 @@
+from tkinter import StringVar
+
 import ttkbootstrap as ttk
 from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.dialogs.dialogs import Messagebox
 import mysql.connector as mysql
 
-from main import DATABASE_NAME, PASSWORD, THEME
+from main import DATABASE_NAME, PASSWORD, FONT_NAME
 
 
 global d
@@ -27,13 +29,13 @@ def start(root):
     window = ttk.Toplevel(root)
     window.title("Sales")
 
-    window.style.configure('.', font=('Arial', 12))
+    window.style.configure('.', font=(FONT_NAME, 12))
 
     main_frame = ttk.Frame(window)
     main_frame.grid(row=0, column=0)
 
     header_label = ttk.Label(main_frame, text="Sales Table",
-                             font=("Arial", 25, "bold"))
+                             font=(FONT_NAME, 25, "bold"))
     header_label.grid(row=0, column=0, padx=20, pady=20)
 
     header_frame = ttk.Frame(main_frame)
@@ -55,9 +57,26 @@ def start(root):
         stock_labelframe, text="Quantity")
     qty_label.grid(row=3, column=0, padx=20, pady=10)
 
-    hospital_id_entry = ttk.Entry(stock_labelframe)
-    medicine_id_entry = ttk.Entry(stock_labelframe)
-    qty_entry = ttk.Entry(stock_labelframe)
+    hospital_drop = StringVar()
+    hospital_drop.set("Select Hospital")
+
+    hospital_id_entry = ttk.Combobox(
+        stock_labelframe, width=18, textvariable=hospital_drop, style='info.TCombobox')
+    cursor.execute("SELECT H_name FROM hospital")
+    data = cursor.fetchall()
+    options = [row[0] for row in data]
+    hospital_id_entry["values"] = options
+
+    medicine_drop = StringVar()
+    medicine_drop.set("Select Vaccine")
+    medicine_id_entry = ttk.Combobox(
+        stock_labelframe, width=18, textvariable=medicine_drop, style='info.TCombobox')
+    cursor.execute("SELECT M_name FROM stock")
+    data2 = cursor.fetchall()
+    options2 = [row[0] for row in data2]
+    medicine_id_entry["values"] = options2
+
+    qty_entry = ttk.Spinbox(stock_labelframe, width=16, from_=1, to=100)
 
     hospital_id_entry.grid(row=1, column=1, padx=10, pady=0)
     medicine_id_entry.grid(row=2, column=1, padx=10, pady=0)
@@ -68,33 +87,45 @@ def start(root):
         m_id = medicine_id_entry.get()
         qty = qty_entry.get()
 
-        q = "select count(*) from partial_order;"
-        cursor.execute(q)
-        data1 = cursor.fetchall()[0]
+        if h_id != "" and m_id != "" and qty != "":
+            if qty.isdigit():
+                q = "select count(*) from partial_order;"
+                cursor.execute(q)
+                data1 = cursor.fetchall()[0]
 
-        q1 = "CALL insert_into_sales('{}','{}',{});".format(m_id, h_id, qty)
-        cursor.execute(q1)
+                q1 = "CALL insert_into_sales('{}','{}',{});".format(
+                    m_id, h_id, qty)
+                cursor.execute(q1)
 
-        # Consume unread results
-        cursor.fetchall()
+                # Consume unread results
+                cursor.fetchall()
 
-        cursor.execute(
-            "select Status from stock where M_name='{}';".format(m_id))
-        val = cursor.fetchall()
-        if val[0][0] == "Expired":
+                cursor.execute(
+                    "select Status from stock where M_name='{}';".format(m_id))
+                val = cursor.fetchall()
+                if val[0][0] == "Expired":
+                    Messagebox.show_warning(
+                        parent=window, title="Warning", message="Vaccine is expired!!")
+
+                q2 = "select count(*) from partial_order;"
+                cursor.execute(q2)
+                data2 = cursor.fetchall()[0]
+                db.commit()
+
+                if data2 > data1:
+                    Messagebox.show_info(
+                        parent=window, title="Info",
+                        message="Some partial orders are there!!")
+                    cursor.execute("CALL update_partial()")
+                    db.commit()
+
+                display()
+            else:
+                Messagebox.show_error(
+                    parent=window, message="Quantity should be a number.")
+        else:
             Messagebox.show_warning(
-                title="Warning", message="Vaccine is expired!!")
-
-        q2 = "select count(*) from partial_order;"
-        cursor.execute(q2)
-        data2 = cursor.fetchall()[0]
-        db.commit()
-
-        if data2 > data1:
-            Messagebox.show_info(message="Some partial orders there!!")
-            cursor.execute("CALL update_partial()")
-            db.commit()
-        display()
+                parent=window, message="All fields are required.")
 
     def display():
         cursor.execute("SELECT * FROM sales;")
@@ -146,14 +177,15 @@ def start(root):
                           rowdata=data,
                           height=5)
 
-        table.autofit_columns()
+        # table.autofit_columns()
         table.grid(row=0, column=0, padx=20, pady=20)
 
     def partial_order():
         root = ttk.Toplevel(title="Partial Orders Table")
         root.resizable(False, False)
 
-        partial_order_frame = ttk.LabelFrame(root, text="Table Information")
+        partial_order_frame = ttk.LabelFrame(
+            root, text="Table Information")
         partial_order_frame.grid(row=0, column=0, padx=20, pady=10)
 
         q1 = "SELECT * FROM partial_order;"
@@ -163,7 +195,7 @@ def start(root):
         headers = [
             {"text": "Hospital ID", "stretch": False},
             {"text": "Vaccine ID", "stretch": False},
-            {"text": "Quantity Left", "stretch": True}]
+            {"text": "Quantity Left", "stretch": False}]
 
         table = Tableview(partial_order_frame,
                           bootstyle="INFO",
@@ -171,7 +203,7 @@ def start(root):
                           rowdata=data,
                           height=5)
 
-        table.autofit_columns()
+        # table.autofit_columns()
         table.grid(row=0, column=0, padx=20, pady=20)
 
     def expire():
@@ -195,7 +227,7 @@ def start(root):
                           rowdata=data,
                           height=10)
 
-        table.autofit_columns()
+        # table.autofit_columns()
         table.grid(row=0, column=0, padx=20, pady=20)
 
     # Button Frame
@@ -223,9 +255,13 @@ def start(root):
         button_frame, text="Expired Stock", command=expire)
     expired_button.grid(row=0, column=5, sticky="news", padx=1, pady=5)
 
+    partial_button = ttk.Button(
+        button_frame, text="Partial Orders", command=partial_order)
+    partial_button.grid(row=0, column=6, sticky="news", padx=1, pady=5)
+
     exit_button = ttk.Button(button_frame, text=" Exit ",
                              command=exit, bootstyle="DANGER")
-    exit_button.grid(row=0, column=6, sticky="news", padx=1, pady=5)
+    exit_button.grid(row=0, column=7, sticky="news", padx=1, pady=5)
 
     window.resizable(False, False)
     window.mainloop()

@@ -3,21 +3,22 @@ from ttkbootstrap.dialogs.dialogs import Messagebox
 from PIL import ImageTk, Image
 
 DATABASE_NAME = "warehouse2"
-PASSWORD = ""
-THEME = "minty"
+PASSWORD = "murtu"
+THEME = "cyborg"
+FONT_NAME = "Cascadia Code"
 
 
 def main():
     window = ttk.Window(themename=THEME, iconphoto=None)
     window.title("Login")
 
-    window.style.configure('.', font=('Arial', 15))
+    window.style.configure('.', font=(FONT_NAME, 15))
 
     frame = ttk.Frame(window)
     frame.grid(row=0, column=0)
 
-    login_label = ttk.Label(frame, text="Login", font=(
-        "Arial", 25, "bold"))
+    login_label = ttk.Label(frame, text="LOGIN", font=(
+        FONT_NAME, 25, "bold"))
     login_label.grid(row=0, column=0, pady=15)
 
     logo_img = ImageTk.PhotoImage(Image.open(
@@ -26,7 +27,7 @@ def main():
     logo_label.grid(row=1, column=0, pady=10)
 
     instamed_label = ttk.Label(frame, text="Instamed",
-                               font=("Arial", 18, "bold"))
+                               font=(FONT_NAME, 18, "bold"))
     instamed_label.grid(row=2, column=0, pady=10)
 
     login_labelframe = ttk.LabelFrame(frame, text="Login Information")
@@ -42,7 +43,7 @@ def main():
     password_entry = ttk.Entry(login_labelframe)
     username_entry.grid(row=0, column=1)
     password_entry.grid(row=1, column=1)
-    password_entry.config(show="*")  # shows ** when entering password
+    password_entry.config(show="•")  # shows ** when entering password
 
     for widget in login_labelframe.winfo_children():
         widget.grid_configure(padx=10, pady=10)
@@ -56,6 +57,7 @@ def main():
                 Messagebox.show_info(
                     title="Information", message="Logged into the system.")
 
+                # window.withdraw()
                 import dashboard
                 dashboard.start(window)
 

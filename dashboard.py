@@ -1,7 +1,7 @@
 import ttkbootstrap as ttk
 import mysql.connector as mysql
 
-from main import DATABASE_NAME, PASSWORD, THEME
+from main import DATABASE_NAME, PASSWORD, FONT_NAME
 
 import mysql.connector as mysql
 
@@ -31,7 +31,7 @@ def start(root):
     frame.grid(row=0, column=0)
 
     header_label = ttk.Label(
-        frame, text="Select from the following options", font=("Arial", 15))
+        frame, text="Select from the following options", font=(FONT_NAME, 15))
     header_label.grid(row=0, column=0, padx=20, pady=10)
 
     def sales():

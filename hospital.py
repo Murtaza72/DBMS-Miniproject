@@ -3,7 +3,7 @@ from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.dialogs.dialogs import Messagebox
 import mysql.connector as mysql
 
-from main import DATABASE_NAME, PASSWORD, THEME
+from main import DATABASE_NAME, PASSWORD, FONT_NAME
 
 global d
 
@@ -27,13 +27,13 @@ def start(root):
     window = ttk.Toplevel(root)
     window.title("Hospital")
 
-    window.style.configure('.', font=('Arial', 12))
+    window.style.configure('.', font=(FONT_NAME, 11))
 
     main_frame = ttk.Frame(window)
     main_frame.grid(row=0, column=0)
 
     header_label = ttk.Label(main_frame, text="Hospital Table",
-                             font=("Arial", 25, "bold"))
+                             font=(FONT_NAME, 25, "bold"))
     header_label.grid(row=0, column=0, padx=20, pady=20)
 
     # Header Frame
@@ -63,21 +63,26 @@ def start(root):
         h_con = hospital_con_entry.get()
         h_name = hospital_name_entry.get()
 
-        if (len(h_con) == 10) and h_con.isdigit() and h_name:
-            print("Added")
-            # print("ID:", h_id)
-            # print("Name:", h_name)
-            q1 = "CALL insert_into_hospital('{}','{}');".format(h_name, h_con)
-            cursor.execute(q1)
-            db.commit()
-            print(cursor.rowcount, "record inserted.")
+        if h_con != "" and h_name != "":
+            if (len(h_con) == 10) and h_con.isdigit():
+                print("Added")
+                q1 = "CALL insert_into_hospital('{}','{}');".format(
+                    h_name, h_con)
+                cursor.execute(q1)
+                db.commit()
+                print(cursor.rowcount, "record inserted.")
+
+                reset()
+                display()
+
+            else:
+                Messagebox.show_warning(
+                    parent=window,
+                    title="Warning", message="Phone number should have 10 digits.", alert=True)
 
         else:
             Messagebox.show_warning(
-                title="Warning", message="Name and Phone number are required(10 digits).")
-
-        reset()
-        display()
+                parent=window, message="All fields are required.")
 
     def delete_():
         h_name = hospital_name_entry.get()
@@ -108,7 +113,7 @@ def start(root):
         data = cursor.fetchall()
 
         headers = [{"text": "ID", "stretch": False},
-                   {"text": "Hospital Name", "stretch": True},
+                   {"text": "Hospital Name", "stretch": False},
                    {"text": "Contact", "stretch": False}]
 
         table = Tableview(hospital_table,
@@ -117,7 +122,7 @@ def start(root):
                           rowdata=data,
                           height=5)
 
-        table.autofit_columns()
+        # table.autofit_columns()
         table.grid(row=0, column=0, padx=20, pady=20)
 
     def reset():
@@ -176,7 +181,7 @@ def start(root):
 
     sale_button = ttk.Button(button_frame, text=" Sales ",
                              command=show_hosp_sale)
-    sale_button.grid(row=0, column=5, sticky="news", padx=1, pady=10)
+    # sale_button.grid(row=0, column=5, sticky="news", padx=1, pady=10)
 
     exit_button = ttk.Button(button_frame, text=" Exit ",
                              command=exit, bootstyle="DANGER")

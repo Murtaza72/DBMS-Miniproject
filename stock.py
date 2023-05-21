@@ -7,7 +7,7 @@ from ttkbootstrap.widgets import DateEntry
 
 import mysql.connector as mysql
 
-from main import DATABASE_NAME, PASSWORD, THEME
+from main import DATABASE_NAME, PASSWORD, FONT_NAME
 
 global d
 
@@ -31,13 +31,13 @@ def start(root):
     window = ttk.Toplevel(root)
     window.title("Stock")
 
-    window.style.configure('.', font=('Arial', 12))
+    window.style.configure('.', font=(FONT_NAME, 12))
 
     main_frame = ttk.Frame(window)
     main_frame.grid(row=0, column=0)
 
     header_label = ttk.Label(main_frame, text="Stock Table",
-                             font=("Arial", 25, "bold"))
+                             font=(FONT_NAME, 25, "bold"))
     header_label.grid(row=0, column=0, padx=20, pady=20)
 
     # Header Frame
@@ -108,13 +108,30 @@ def start(root):
         disease = disease_drop.get()
         m_stk = stock_entry.get()
         m_rate = rate_entry.get()
-        q1 = "CALL insert_into_stock('{}','{}','{}','{}',{},{});".format(
-            str(m_name), str(m_mfg), str(m_exp), str(disease), m_stk, m_rate)
-        cursor.execute(q1)
-        db.commit()
-        print(cursor.rowcount, "records inserted into table!!")
-        print("Added")
-        display()
+
+        if m_name != "" and m_mfg != "" and m_exp != "" and disease != "" and m_stk != "" and m_rate != "":
+
+            if int(m_stk) > 0:
+                if int(m_rate) > 0:
+                    q1 = "CALL insert_into_stock('{}','{}','{}','{}',{},{});".format(
+                        str(m_name), str(m_mfg), str(m_exp), str(disease), m_stk, m_rate)
+                    cursor.execute(q1)
+                    db.commit()
+                    print(cursor.rowcount, "records inserted into table!!")
+
+                    display()
+
+                else:
+                    Messagebox.show_warning(
+                        parent=window, message="Value of Rate should be more than 0.")
+
+            else:
+                Messagebox.show_warning(
+                    parent=window, message="Value of Stock should be more than 0.")
+
+        else:
+            Messagebox.show_warning(
+                parent=window, message="All fields are required.")
 
     def delete_():
         m_name = hospital_name_entry.get()
@@ -126,8 +143,8 @@ def start(root):
 
     def update():
         m_name = hospital_name_entry.get()
-        m_mfg = mfg_date_entry.get()
-        m_exp = exp_date_entry.get()
+        m_mfg = mfg_date_entry.entry.get()
+        m_exp = exp_date_entry.entry.get()
         disease = disease_drop.get()
         m_stk = stock_entry.get()
         m_rate = rate_entry.get()
@@ -153,10 +170,10 @@ def start(root):
                    {"text": "Vaccine Name", "stretch": True},
                    {"text": "Mfg Date", "stretch": True},
                    {"text": "Expiry Date", "stretch": True},
-                   {"text": "Disease", "stretch": True},
-                   {"text": "Stock", "stretch": True},
-                   {"text": "Rate", "stretch": True},
-                   {"text": "Status", "stretch": True}]
+                   {"text": "Disease", "stretch": False},
+                   {"text": "Stock", "stretch": False},
+                   {"text": "Rate", "stretch": False},
+                   {"text": "Status", "stretch": False}]
 
         table = Tableview(stock_table,
                           bootstyle="INFO",
