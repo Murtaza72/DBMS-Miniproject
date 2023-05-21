@@ -1,0 +1,306 @@
+1. create stock table----------------------------------------------------------------------------------------------------------
+
+mysqlcreate table stock(
+     M_code int auto_increment,
+     M_name varchar(255) not null,
+     M_mfg date not null,
+     M_exp date not null,
+     Disease varchar(255) not null,
+     M_stock int not null,
+     Rate float not null,
+     Status varchar(255) DEFAULT("Active") not null,
+     primary key(M_code)
+     );
+Query OK, 0 rows affected (0.13 sec)
+
+2. Create hospital table----------------------------------------------------------------------------------------------------------
+
+mysqlcreate table hospital
+     (
+     H_id int auto_increment,
+     H_name varchar(255) not null,
+     H_contact varchar(255) not null,
+     primary key(H_id)
+     );
+Query OK, 0 rows affected (0.03 sec)
+
+3.Create Expired table------------------------------------------------------------------------------------------------------------
+
+create table Expired
+     (
+     M_id int not null,
+     M_name varchar(255) not null,
+     Exp_date date not null,
+     Foreign key(M_id) references stock(M_code),
+     primary key(M_id)
+     );
+Query OK, 0 rows affected (0.03 sec)
+
+4.Create sales table----------------------------------------------------------------------------------------------------------------
+
+mysqlcreate table sales
+     (
+     Batch_id int auto_increment,
+     M_id int not null,
+     H_id int not null,
+     M_qty int not null,
+     Order_date date not null,
+     Total_price float not null,
+     foreign key(M_id) references stock(M_code),
+     foreign key(H_id) references hospital(H_id),
+     primary key(Batch_id,M_id,H_id)
+     );
+Query OK, 0 rows affected (0.04 sec)
+
+5.procedure for inserting hospital--------------------------------------------------------------------------------------------------
+
+delimiter //
+CREATE PROCEDURE insert_into_hospital(IN hosp_name varchar(255),IN hosp_contact varchar(255))
+     BEGIN
+     DECLARE EXIT HANDLER FOR 1062
+     SELECT 'Error,Duplicate key not allowed!!';
+     insert into hospital(H_name,H_contact) values(hosp_name,hosp_contact);
+     END//
+
+6. Procedure for inserting into stock------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE insert_into_stock(IN name varchar(255),IN mfg date,IN exp date,IN disease varchar(255),IN stock int,IN rate float)
+     BEGIN
+     DECLARE EXIT HANDLER FOR 1062
+     SELECT 'Error,Duplicate key not allowed!!';
+     insert into stock (M_name,M_mfg,M_exp,Disease,M_stock,Rate) values(name,mfg,exp,disease,stock,rate);
+     END
+     //
+7. Procedure for updating status------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE update_status()
+DELIMITER //
+
+CREATE PROCEDURE update_status()
+BEGIN
+    DECLARE row_not_found CONDITION FOR SQLSTATE '02000';
+
+    DECLARE EXIT HANDLER FOR NOT FOUND
+    BEGIN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No rows found in stock table.';
+    END;
+
+    UPDATE stock SET Status = 'Expired' WHERE CURDATE() >= M_exp;
+    
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '02000' SET MESSAGE_TEXT = 'No rows found in stock table.';
+    END IF;
+END//
+
+DELIMITER ;
+
+     //
+8. Procedure for getting monthly sales
+
+DELIMITER //
+CREATE PROCEDURE getmonthlysales()
+BEGIN
+    DECLARE sql_state VARCHAR(5) DEFAULT '00000';
+    DECLARE not_found CONDITION FOR SQLSTATE '02000';
+
+    DECLARE EXIT HANDLER FOR not_found
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 sql_state = RETURNED_SQLSTATE;
+        IF (sql_state = '02000') THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No rows found.';
+        END IF;
+    END;
+
+    SELECT MONTHNAME(Order_date) AS month, SUM(Total_Price) AS total_price
+    FROM sales
+    GROUP BY MONTHNAME(Order_date);
+    
+    SELECT 'Query executed successfully.' AS Result; -- Optional: Display a success message
+END //
+DELIMITER ;
+
+9. Procedure for inserting into sales table----------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE insert_into_sales(IN name varchar(255), IN h_name varchar(255), IN qty int)
+     BEGIN
+         DECLARE var1 int;
+         DECLARE var2 int;
+	 DECLARE var3 varchar(255);
+         DECLARE var4 float;
+         DECLARE var5 float;
+	 DECLARE var6 date;
+    
+         SELECT H_id INTO var1 FROM hospital WHERE H_name = h_name LIMIT 1;
+         SELECT M_code INTO var2 FROM stock WHERE M_name = name LIMIT 1;
+         SELECT RATE INTO var4 FROM stock WHERE M_name = name LIMIT 1;
+	 SELECT Status INTO var3 FROM stock WHERE M_name=name LIMIT 1;
+	 SELECT M_exp INTO var6 FROM stock WHERE M_name=name LIMIT 1;
+    
+         SET var5 = var4 * qty;
+	 
+	 IF(var3="ACTIVE") THEN    
+         	INSERT INTO sales(H_id, M_id, M_Qty, Order_date, Total_Price)
+         	VALUES(var1, var2, qty, CURDATE(), var5);
+	 ELSE
+      IF NOT EXISTS(SELECT M_id from expired where M_id=var2)
+      THEN
+       INSERT INTO expired(M_ID, M_name, Exp_date)
+       VALUES(var2,name,var6);
+      END IF;
+      END IF;
+		END//
+
+10. Get hospital sales--------------------------------------------------------------------------------------------------------------------
+
+ CREATE PROCEDURE gethospsales()
+    BEGIN
+    select H_id,sum(Total_Price) from sales GROUP BY H_id;
+    END//
+11. Get hospital sales--------------------------------------------------------------------------------------------------------------------
+
+ create procedure gethospsales2()
+    begin
+    select sales.Batch_id,sales.H_id,hospital.H_name,sum(sales.Total_Price) as Revenue from sales
+    INNER JOIN hospital ON hospital.H_ID=sales.H_id
+    GROUP BY sales.H_id;
+    end//
+12. Stock updation trigger-----------------------------------------------------------------------------------------------------------------
+
+ create trigger t_bin
+    before insert
+    on sales
+    for each row
+    begin
+    declare qt1 int;
+    declare diff int;
+    select M_stock into qt1 from stock where M_code=NEW.M_id;
+    IF(qt1>NEW.M_qty) THEN
+    	update stock set M_stock=M_stock-NEW.M_qty where M_code=NEW.M_id;
+    ELSE
+		set diff=(NEW.M_qty)-qt1;
+		insert into partial_order values(NEW.H_id,NEW.M_id,diff);
+		update stock set M_stock=0 where M_code=NEW.M_id;
+    END IF;
+    end;
+    //
+
+13. Deletion in stock table-------------------------------------------------------------------------------------------------------------------
+
+DELIMITER //
+
+CREATE PROCEDURE delete_from_stocks(IN name varchar(255))
+BEGIN
+    DECLARE row_not_found CONDITION FOR SQLSTATE '02000';
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+    BEGIN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No rows found in stock table.';
+    END;
+
+    SET FOREIGN_KEY_CHECKS = 0;
+    DELETE FROM stock WHERE M_name = name;
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '02000' SET MESSAGE_TEXT = 'No rows found in stock table.';
+    END IF;
+
+    SET FOREIGN_KEY_CHECKS = 1;
+END//
+
+DELIMITER ;
+
+
+
+14. Getting stock count
+
+ CREATE FUNCTION get_stock(name varchar(255))
+    returns int
+    deterministic
+    begin
+    DECLARE stk int;
+    select M_stock into stk from stock where M_name=name;
+    RETURN(stk);
+    END//
+
+15. Deletion in hospital table-------------------------------------------------------------------------------------------------------------------
+ 
+DELIMITER //
+
+CREATE PROCEDURE delete_from_hospital(IN name varchar(255))
+BEGIN
+    DECLARE row_not_found CONDITION FOR SQLSTATE '02000';
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+    BEGIN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No rows found in hospital table.';
+    END;
+
+    SET FOREIGN_KEY_CHECKS = 0;
+    DELETE FROM hospital WHERE H_name = name;
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '02000' SET MESSAGE_TEXT = 'No rows found in hospital table.';
+    END IF;
+
+    SET FOREIGN_KEY_CHECKS = 1;
+END//
+
+DELIMITER ;
+
+
+16.Partial order table creation-------------------------------------------------------------------------------------------------------------------
+
+ create table partial_order
+    (
+    H_id int not null,
+    M_id int not null,
+    Left_qty int not null,
+    foreign key(H_id) references sales(H_id),
+    foreign key(M_id) references sales(M_id)
+    );
+---------------------------------------------------------------------------------------------------------------------------------------------------
+17.stock update in sales if left									     
+ create procedure update_sale_lstock(IN name varchar(255),IN h_name varchar(255),IN stk int)               
+     begin
+     declare qt1 int;
+     declare id int;
+     declare id2 int;
+     declare diff int;
+     select M_stock INTO qt1 from stock where M_name=name;                         NOT WORKING ...ON STANDBY
+     select M_code INTO id from stock where M_name=name;
+     select H_id INTO id2 from hospital where H_name=h_name;
+     IF stk>qt1 THEN
+     update sales set M_qty=qt1 where M_id=id and H_id=id2;
+     ELSE
+     update sales set M_qty=stk where M_id=id and H_id=id2;
+     END IF;
+     END//
+---------------------------------------------------------------------------------------------------------------------------------------------------
+ create procedure update_partial()
+     begin
+     declare qt1 int;
+     declare qt2 int;
+     declare rec_id int;
+     declare diff int;
+     select M_qty into qt1 from sales ORDER BY Batch_id DESC LIMIT 1;
+     select Left_qty into qt2 from partial_order ORDER BY M_id DESC LIMIT 1;
+     set diff=qt1-qt2;
+     select Batch_id into rec_id from sales ORDER BY Batch_id DESC LIMIT 1;
+     update sales set M_qty=diff where Batch_id=rec_id;
+     end//
+------------------------------------------------------------------------------------------------------------------------------------------------------
+create procedure reset_all()
+     begin
+     delete from expired;
+     delete from partial_order;
+     delete from sales;
+     delete from hospital;
+     delete from stock;
+     ALTER table stock auto_increment=0;
+     ALTER table hospital auto_increment=0;
+     ALTER table sales auto_increment=0;
+     end//
